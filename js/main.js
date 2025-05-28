@@ -52,13 +52,13 @@ let app = {
       );
       switch (choice) {
         case "1": {
-          const accNo = prompt("Enter your account number:");
-          customer.depositMoney(accNo);
+          const accNum = prompt("Enter your account number:");
+          customer.depositMoney(accNum);
           break;
         }
         case "2": {
-          const accNo = prompt("Enter your account number:");
-          customer.withdrawMoney(accNo);
+          const accNum = prompt("Enter your account number:");
+          customer.withdrawMoney(accNum);
           break;
         }
         case "3": {
@@ -69,8 +69,8 @@ let app = {
           break;
         }
         case "4": {
-          const accNo = prompt("Enter account number to check balance:");
-          const acc = customer.getAccount(accNo);
+          const accNum = prompt("Enter account number to check balance:");
+          const acc = customer.getAccount(accNum);
           if (acc) {
             alert(`Balance: ₦${acc.getBalance()}`);
           } else {
@@ -79,8 +79,8 @@ let app = {
           break;
         }
         case "5": {
-          const accNo = prompt("Enter account number to view transactions:");
-          const acc = customer.getAccount(accNo);
+          const accNum = prompt("Enter account number to view transactions:");
+          const acc = customer.getAccount(accNum);
           if (acc) {
             const txns = acc.getTransactions();
             if (txns.length === 0) {
@@ -237,21 +237,20 @@ let app = {
 
     //Deposit Money
     this.depositMoney = function (accountNo) {
-      const account = this.getAccount(accountNo);
+      console.log("DepositMoney started");
+      let amount = parseFloat(prompt("Enter amount to deposit:"));
+      if (isNaN(amount) || amount <= 0) {
+        alert("Invalid amount.");
+        return;
+      }
+      let account = this.getAccount(accountNo);
       if (!account) {
         console.log("Account not found.");
         return;
       }
-
-      const amount = parseFloat(prompt("Enter amount to deposit:"));
-      if (isNaN(amount) || amount <= 0) {
-        console.log("Invalid amount.");
-        return;
-      }
-
-      const pin = prompt("Enter your account PIN:");
+      let pin = prompt("Enter your account PIN:");
       if (!account.checkPin(pin)) {
-        console.log("Invalid PIN.");
+        alert("Incorrect PIN.");
         return;
       }
 
