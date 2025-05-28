@@ -18,7 +18,9 @@ let app = {
   start: function () {
     app.Bank.loadCustomers();
     console.log(`Welcome to the app.`);
-    const userDecision = prompt("What would you like to do?\n1. Login\n2. Create an account");
+    const userDecision = prompt(
+      "What would you like to do?\n1. Login\n2. Create an account"
+    );
 
     if (userDecision === "1") {
       const customer = app.Bank.authenticateCustomer();
@@ -29,7 +31,7 @@ let app = {
       throw new Error("Invalid command");
     }
   },
-  //(username, password, name, address, dob, phone, email
+  //(username, password, name, address, dob, phone, email)
   createCustomer: function () {
     const fullname = prompt("Enter your full name:");
     const username = prompt("Enter a username:");
@@ -156,21 +158,102 @@ let app = {
       return this.accounts;
     };
 
+    //Deposit Money
     this.depositMoney = function (accountNo) {
-      let amount = parseFloat(prompt("Enter amount to deposit:"));
-      if (isNaN(amount) || amount <= 0) {
-        alert("Invalid amount.");
-        return;
-      }
-      //Todo; first find the account
-      let account = this.getAccount(accountNo);
+      const account = this.getAccount(accountNo);
       if (!account) {
-        console.log(`Invalid account number.`);
+        console.log("Account not found.");
         return;
-      }
+      };
+
+      const amount = parseFloat(prompt("Enter amount to deposit:"));
+      if (isNaN(amount) || amount <= 0) {
+        console.log("Invalid amount.");
+        return;
+      };
+
+      const pin = prompt("Enter your account PIN:");
+      if (!account.checkPin(pin)) {
+        console.log("Invalid PIN.");
+        return;
+      };
+
       account.deposit(amount);
       Bank.saveCustomers();
       alert(`Deposit successful. New balance: ₦${account.getBalance()}`);
+      app.Bank.saveCustomers();
+    };
+
+    //Withdraw Money
+    this.withdrawMoney = function (accountNo) {
+      const account = this.getAccount(accountNo);
+      if (!account) {
+        console.log("Account not found.");
+        return;
+      };
+
+      const amount = parseFloat(prompt("Enter amount to withdraw:"));
+      if (isNaN(amount) || amount <= 0) {
+        console.log("Invalid amount.");
+        return;
+      };
+
+      const pin = prompt("Enter your account PIN:");
+      if (!account.checkPin(pin)) {
+        console.log("Invalid PIN.");
+        return;
+      };
+
+      try {
+        account.withdraw(amount);
+        console.log(
+          `Withdrawal successful. New balance: ₦${account.getBalance()}`
+        );
+        app.Bank.saveCustomers();
+      } catch (err) {
+        console.log(err.message);
+      }
+    };
+
+    //Transfer Money
+    this.transferMoney = function (fromAccountNo, toAccountNo, targetUsername) {
+      const fromAccount = this.getAccount(fromAccountNo);
+      if (!fromAccount) {
+        console.log("Your source account not found.");
+        return;
+      };
+
+      const targetCustomer = app.Bank.findCustomer(targetUsername);
+      if (!targetCustomer) {
+        console.log("Target customer not found.");
+        return;
+      };
+
+      const toAccount = targetCustomer.getAccount(toAccountNo);
+      if (!toAccount) {
+        console.log("Target account not found.");
+        return;
+      };
+
+      const amount = parseFloat(prompt("Enter amount to transfer:"));
+      if (isNaN(amount) || amount <= 0) {
+        console.log("Invalid amount.");
+        return;
+      };
+
+      const pin = prompt("Enter your account PIN:");
+      if (!fromAccount.checkPin(pin)) {
+        console.log("Invalid PIN.");
+        return;
+      };
+
+      try {
+        fromAccount.transfer(amount, toAccount);
+        console.log("Transfer successful.");
+        app.Bank.saveCustomers();
+      } catch (err) {
+        console.log(err.message);
+      }
     };
   },
 
@@ -248,11 +331,7 @@ let app = {
           // Rehydrate accounts
           if (Array.isArray(c.accounts)) {
             c.accounts.forEach((acc) => {
-              const account = new app.Account(
-                acc.number,
-                acc.type,
-                acc.pin
-              );
+              const account = new app.Account(acc.number, acc.type, acc.pin);
               account.balance = acc.balance;
               account.transactions = acc.transactions || [];
               customer.addAccount(account);
@@ -266,3 +345,4 @@ let app = {
 };
 
 app.start();
+
