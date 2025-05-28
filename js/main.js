@@ -24,11 +24,88 @@ let app = {
 
     if (userDecision === "1") {
       const customer = app.Bank.authenticateCustomer();
-      console.log(`Welcome, ${customer.name}!`);
+      if (customer) {
+        console.log(`Welcome, ${customer.name}!`);
+        app.customerMenu(customer);
+      } else {
+        console.log("Login failed.")
+      }
     } else if (userDecision === "2") {
-      app.createCustomer();
+      const customer = app.createCustomer();
+      app.customerMenu(customer);
     } else {
       throw new Error("Invalid command");
+    }
+  },
+
+  customerMenu: function (customer) {
+    let running = true;
+    while (running) {
+      const choice = prompt(
+      `Choose an action:
+      1. Deposit Money
+      2. Withdraw Money
+      3. Transfer Money
+      4. View Balance
+      5. View Transactions
+      6. Exit`
+      );
+      switch (choice) {
+        case "1": {
+          const accNo = prompt("Enter your account number:");
+          customer.depositMoney(accNo);
+          break;
+        }
+        case "2": {
+          const accNo = prompt("Enter your account number:");
+          customer.withdrawMoney(accNo);
+          break;
+        }
+        case "3": {
+          const fromAcc = prompt("Enter your account number:");
+          const toAcc = prompt("Enter recipient account number:");
+          const recipientUsername = prompt("Enter recipient username:");
+          customer.transferMoney(fromAcc, toAcc, recipientUsername);
+          break;
+        }
+        case "4": {
+          const accNo = prompt("Enter account number to check balance:");
+          const acc = customer.getAccount(accNo);
+          if (acc) {
+            alert(`Balance: ₦${acc.getBalance()}`);
+          } else {
+            alert("Account not found.");
+          }
+          break;
+        }
+        case "5": {
+          const accNo = prompt("Enter account number to view transactions:");
+          const acc = customer.getAccount(accNo);
+          if (acc) {
+            const txns = acc.getTransactions();
+            if (txns.length === 0) {
+              alert("No transactions.");
+            } else {
+              txns.forEach((t, i) => {
+                console.log(
+                  `${i + 1}. ${t.type} ₦${t.amount} - ${t.status} - ${
+                    t.details
+                  } - ${t.date}`
+                );
+              });
+            }
+          } else {
+            alert("Account not found.");
+          }
+          break;
+        }
+        case "6":
+          running = false;
+          alert("Thank you for using the bank app.");
+          break;
+        default:
+          alert("Invalid choice.");
+      }
     }
   },
   //(username, password, name, address, dob, phone, email)
@@ -164,19 +241,19 @@ let app = {
       if (!account) {
         console.log("Account not found.");
         return;
-      };
+      }
 
       const amount = parseFloat(prompt("Enter amount to deposit:"));
       if (isNaN(amount) || amount <= 0) {
         console.log("Invalid amount.");
         return;
-      };
+      }
 
       const pin = prompt("Enter your account PIN:");
       if (!account.checkPin(pin)) {
         console.log("Invalid PIN.");
         return;
-      };
+      }
 
       account.deposit(amount);
       Bank.saveCustomers();
@@ -190,19 +267,19 @@ let app = {
       if (!account) {
         console.log("Account not found.");
         return;
-      };
+      }
 
       const amount = parseFloat(prompt("Enter amount to withdraw:"));
       if (isNaN(amount) || amount <= 0) {
         console.log("Invalid amount.");
         return;
-      };
+      }
 
       const pin = prompt("Enter your account PIN:");
       if (!account.checkPin(pin)) {
         console.log("Invalid PIN.");
         return;
-      };
+      }
 
       try {
         account.withdraw(amount);
@@ -221,31 +298,31 @@ let app = {
       if (!fromAccount) {
         console.log("Your source account not found.");
         return;
-      };
+      }
 
       const targetCustomer = app.Bank.findCustomer(targetUsername);
       if (!targetCustomer) {
         console.log("Target customer not found.");
         return;
-      };
+      }
 
       const toAccount = targetCustomer.getAccount(toAccountNo);
       if (!toAccount) {
         console.log("Target account not found.");
         return;
-      };
+      }
 
       const amount = parseFloat(prompt("Enter amount to transfer:"));
       if (isNaN(amount) || amount <= 0) {
         console.log("Invalid amount.");
         return;
-      };
+      }
 
       const pin = prompt("Enter your account PIN:");
       if (!fromAccount.checkPin(pin)) {
         console.log("Invalid PIN.");
         return;
-      };
+      }
 
       try {
         fromAccount.transfer(amount, toAccount);
@@ -273,7 +350,7 @@ let app = {
     ) {
       if (this.customers.find((c) => c.username === username))
         throw new Error("Username exists.");
-      const customer = new Customer(
+      const customer = new app.Customer(
         username,
         password,
         name,
@@ -345,4 +422,3 @@ let app = {
 };
 
 app.start();
-
